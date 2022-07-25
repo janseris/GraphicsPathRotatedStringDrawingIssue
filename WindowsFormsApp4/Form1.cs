@@ -71,8 +71,8 @@ namespace WindowsFormsApp4
             var path = new GraphicsPath();
             path.AddString("sample text", new FontFamily("Arial"), (int)FontStyle.Regular, 120, Position, stringFormat);
 
-            DrawRectangle(g, path); //this is the position I need the text to be
-            DrawRectangle(g, path, verticalCenter: true); //this is the position I need the text to be
+            DrawRectangle(g, path); //this is the rectangle/position I need the text to be
+            DrawRectangle(g, path, verticalCenter: true); //this is the rectangle/position I need the text to be
 
             //rotate
             Matrix rotationMatrix = new Matrix();
