@@ -1,5 +1,6 @@
 # GraphicsPathRotatedStringDrawingIssue
-black = expected, red = actual
+
+~~black = expected, red = actual~~
 
 mousemove = change drawing position
 mouseclick left = start/stop rotation
