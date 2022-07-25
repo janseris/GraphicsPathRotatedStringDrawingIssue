@@ -47,8 +47,8 @@ namespace WindowsFormsApp4
         string pinSymbol => ((char)0xE840).ToString(); //points to bottom left corner
         string arrowBottomRightSymbol => ((char)0xE741).ToString(); //points to bottom right corner
 
-        string arrowBottomSymbol => ((char)0xE74B).ToString();
         string arrowTopSymbol => ((char)0xE74A).ToString();
+        string arrowBottomSymbol => ((char)0xE74B).ToString();
         string arrowLeftSymbol => ((char)0xE72B).ToString();
         string arrowRightSymbol => ((char)0xE72A).ToString();
        
@@ -58,13 +58,13 @@ namespace WindowsFormsApp4
         {
             arrowTopSymbol,
             arrowBottomSymbol,
-            arrowTopLeftSymbol,
-            arrowTopRightSymbol,
-            pinSymbol,
-            arrowBottomRightSymbol,
-            centerSymbol,
-            arrowLeftSymbol,
-            arrowRightSymbol,
+            //arrowTopLeftSymbol,
+            //arrowTopRightSymbol,
+            //pinSymbol,
+            //arrowBottomRightSymbol,
+            //centerSymbol,
+            //arrowLeftSymbol,
+            //arrowRightSymbol,
         };
 
         public Position GetPosition(string symbol)
@@ -94,6 +94,7 @@ namespace WindowsFormsApp4
             {
                 return Position.Top;
             }
+
             if (symbol == arrowLeftSymbol)
             {
                 return Position.Left;
@@ -127,20 +128,20 @@ namespace WindowsFormsApp4
             e.Graphics.DrawEllipse(new Pen(Color.Black, width: 5), new RectangleF(DrawLocation, new Size(1, 1)));
         }
 
-        private void ApplyTranslationRelativeToTopLeft(Matrix matrix, SizeF boundingRectangleSize, Position position)
+        private void ApplyTranslationRelativeToTopLeft(Matrix matrix, SizeF rect, Position position)
         {
             SizeF topLeftTranslate = new SizeF(0, 0);
-            SizeF bottomLeftTranslate = new SizeF(0, -boundingRectangleSize.Height);
-            SizeF topRightTranslate = new SizeF(-boundingRectangleSize.Width, 0);
-            SizeF bottomRightTranslate = new SizeF(-boundingRectangleSize.Width, -boundingRectangleSize.Height);
+            SizeF bottomLeftTranslate = new SizeF(0, -rect.Height);
+            SizeF topRightTranslate = new SizeF(-rect.Width, 0);
+            SizeF bottomRightTranslate = new SizeF(-rect.Width, -rect.Height);
 
-            SizeF topTranslate = new SizeF(-boundingRectangleSize.Width / 2f, 0);
-            SizeF bottomTranslate = new SizeF(-boundingRectangleSize.Width / 2f, -boundingRectangleSize.Height);
+            SizeF topTranslate = new SizeF(-rect.Width / 2f, 0);
+            SizeF bottomTranslate = new SizeF(-rect.Width / 2f, -rect.Height);
 
-            SizeF leftTranslate = new SizeF(0, -boundingRectangleSize.Height / 2f);
-            SizeF rightTranslate = new SizeF(-boundingRectangleSize.Width, -boundingRectangleSize.Height / 2f);
+            SizeF leftTranslate = new SizeF(0, -rect.Height / 2f);
+            SizeF rightTranslate = new SizeF(-rect.Width, -rect.Height / 2f);
 
-            SizeF centerTranslate = new SizeF(-boundingRectangleSize.Width / 2f, -boundingRectangleSize.Height / 2f);
+            SizeF centerTranslate = new SizeF(-rect.Width / 2f, -rect.Height / 2f);
 
             SizeF translation;
             switch (position)
@@ -185,19 +186,14 @@ namespace WindowsFormsApp4
             {
                 path.AddString(text, new FontFamily("Segoe MDL2 Assets"), (int)FontStyle.Regular, 120, new PointF(0, 0), StringFormat.GenericDefault);
 
-                var br = path.GetBounds(); //"bounding rectangle"
-                var bp = br.Location; //"base point"?
-
-                SizeF topLeftTranslate = new SizeF(0, 0); //OK
-                SizeF bottomLeftTranslate = new SizeF(0, -br.Height); //OK
-                SizeF topRightTranslate = new SizeF(-br.Width, 0); 
-                SizeF bottomRightTranslate = new SizeF(-br.Width, -br.Height); 
+                var boundingRectangle = path.GetBounds();
+                var offset = boundingRectangle.Location;
 
                 var matrix = new Matrix();
-                matrix.Translate(DrawLocation.X - bp.X, DrawLocation.Y - bp.Y); //set draw to position with correction by unwanted string drawing offset ("bp")
+                matrix.Translate(DrawLocation.X - offset.X, DrawLocation.Y - offset.Y); //set draw to position with correction by unwanted string drawing offset ("bp")
 
                 var relativePositionToOrigin = GetPosition(text);
-                ApplyTranslationRelativeToTopLeft(matrix, br.Size, relativePositionToOrigin);
+                ApplyTranslationRelativeToTopLeft(matrix, boundingRectangle.Size, relativePositionToOrigin);
                 path.Transform(matrix);
 
                 // To rotate arround the center of the path:
