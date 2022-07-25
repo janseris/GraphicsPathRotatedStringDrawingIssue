@@ -12,4 +12,4 @@ https://github.com/dotnet/winforms/issues/7485
 
 
 Working result:
-<video src="[https://user-images.githubusercontent.com/126239/151127893-5c98ba8d-c431-4a25-bb1f-e0b33645a2b6.mp4](https://i.imgur.com/tDNsjcW.mp4)"></video>
+<video src="https://i.imgur.com/tDNsjcW.mp4"></video>
