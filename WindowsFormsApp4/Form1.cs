@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -13,7 +15,7 @@ namespace WindowsFormsApp4
         };
 
         int Rotation = 0;
-        PointF Position = PointF.Empty;
+        PointF DrawLocation = PointF.Empty;
 
         public Form1()
         {
@@ -21,7 +23,7 @@ namespace WindowsFormsApp4
             Timer.Tick += (s, e) => { Rotation++; Rotation %= 360; Redraw(); };
             Timer.Start();
             this.Paint += Form1_Paint;
-            this.MouseMove += (s, e) => { Position = e.Location; Redraw(); };
+            this.MouseMove += (s, e) => { DrawLocation = e.Location; Redraw(); };
             this.DoubleBuffered = true; //prevent flickering
 
             this.MouseClick += (s, e) => { if (e.Button == MouseButtons.Left) { if (Timer.Enabled) { Timer.Stop(); } else { Timer.Start(); } } if (e.Button == MouseButtons.Right) { Rotation = 0; Redraw(); } };
@@ -45,16 +47,136 @@ namespace WindowsFormsApp4
         string pinSymbol => ((char)0xE840).ToString(); //points to bottom left corner
         string arrowBottomRightSymbol => ((char)0xE741).ToString(); //points to bottom right corner
 
+        string arrowBottomSymbol => ((char)0xE74B).ToString();
+        string arrowTopSymbol => ((char)0xE74A).ToString();
+        string arrowLeftSymbol => ((char)0xE72B).ToString();
+        string arrowRightSymbol => ((char)0xE72A).ToString();
+       
+        string centerSymbol => ((char)0xE713).ToString();
+
+        List<string> Symbols => new List<string>
+        {
+            arrowTopSymbol,
+            arrowBottomSymbol,
+            arrowTopLeftSymbol,
+            arrowTopRightSymbol,
+            pinSymbol,
+            arrowBottomRightSymbol,
+            centerSymbol,
+            arrowLeftSymbol,
+            arrowRightSymbol,
+        };
+
+        public Position GetPosition(string symbol)
+        {
+            if(symbol == arrowTopLeftSymbol)
+            {
+                return Position.TopLeft;
+            }
+            if(symbol == arrowTopRightSymbol)
+            {
+                return Position.TopRight;
+            }
+            if (symbol == pinSymbol)
+            {
+                return Position.BottomLeft;
+            }
+            if (symbol == arrowBottomRightSymbol)
+            {
+                return Position.BottomRight;
+            }
+
+            if (symbol == arrowBottomSymbol)
+            {
+                return Position.Bottom;
+            }
+            if (symbol == arrowTopSymbol)
+            {
+                return Position.Top;
+            }
+            if (symbol == arrowLeftSymbol)
+            {
+                return Position.Left;
+            }
+            if (symbol == arrowRightSymbol)
+            {
+                return Position.Right;
+            }
+            if (symbol == centerSymbol)
+            {
+                return Position.Center;
+            }
+            throw new ArgumentException();
+        }
+
+
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            DrawText(e.Graphics, pinSymbol); //draws OK
-            DrawText(e.Graphics, arrowTopLeftSymbol); //draws OK
-            
-            DrawText(e.Graphics, arrowTopRightSymbol);
-            DrawText(e.Graphics, arrowBottomRightSymbol);
+            foreach(var symbol in Symbols)
+            {
+                DrawText(e.Graphics, symbol);
+            }
 
-            e.Graphics.DrawEllipse(new Pen(Color.Black, width: 5), new RectangleF(Position, new Size(1, 1)));
+            //DrawText(e.Graphics, pinSymbol); //draws OK
+            //DrawText(e.Graphics, arrowTopLeftSymbol); //draws OK
+            
+            //DrawText(e.Graphics, arrowTopRightSymbol);
+            //DrawText(e.Graphics, arrowBottomRightSymbol);
+
+            e.Graphics.DrawEllipse(new Pen(Color.Black, width: 5), new RectangleF(DrawLocation, new Size(1, 1)));
+        }
+
+        private void ApplyTranslationRelativeToTopLeft(Matrix matrix, SizeF boundingRectangleSize, Position position)
+        {
+            SizeF topLeftTranslate = new SizeF(0, 0);
+            SizeF bottomLeftTranslate = new SizeF(0, -boundingRectangleSize.Height);
+            SizeF topRightTranslate = new SizeF(-boundingRectangleSize.Width, 0);
+            SizeF bottomRightTranslate = new SizeF(-boundingRectangleSize.Width, -boundingRectangleSize.Height);
+
+            SizeF topTranslate = new SizeF(-boundingRectangleSize.Width / 2f, 0);
+            SizeF bottomTranslate = new SizeF(-boundingRectangleSize.Width / 2f, -boundingRectangleSize.Height);
+
+            SizeF leftTranslate = new SizeF(0, -boundingRectangleSize.Height / 2f);
+            SizeF rightTranslate = new SizeF(-boundingRectangleSize.Width, -boundingRectangleSize.Height / 2f);
+
+            SizeF centerTranslate = new SizeF(-boundingRectangleSize.Width / 2f, -boundingRectangleSize.Height / 2f);
+
+            SizeF translation;
+            switch (position)
+            {
+                case Position.Top:
+                    translation = topTranslate;
+                    break;
+                case Position.Bottom:
+                    translation = bottomTranslate;
+                    break;
+                case Position.Left:
+                    translation = leftTranslate;
+                    break;
+                case Position.Right:
+                    translation = rightTranslate;
+                    break;
+                case Position.TopLeft:
+                    translation = topLeftTranslate;
+                    break;
+                case Position.TopRight:
+                    translation = topRightTranslate;
+                    break;
+                case Position.BottomLeft:
+                    translation = bottomLeftTranslate;
+                    break;
+                case Position.BottomRight:
+                    translation = bottomRightTranslate;
+                    break;
+                case Position.Center:
+                    translation = centerTranslate;
+                    break;
+                default:
+                    throw new ArgumentException();
+            }
+
+            matrix.Translate(translation.Width, translation.Height);
         }
 
         private void DrawText(Graphics g, string text, bool drawBoundingRectangle = false)
@@ -71,30 +193,12 @@ namespace WindowsFormsApp4
                 SizeF topRightTranslate = new SizeF(-br.Width, 0); 
                 SizeF bottomRightTranslate = new SizeF(-br.Width, -br.Height); 
 
-                var m1 = new Matrix();
-                m1.Translate(Position.X - bp.X, Position.Y - bp.Y); //set draw to position with correction by unwanted string drawing offset ("bp")
-                SizeF relativeTranslate = SizeF.Empty; //default
-                //OK
-                if(text == arrowTopLeftSymbol)
-                {
-                    relativeTranslate = topLeftTranslate; //in fact, same as default
-                } 
-                //OK
-                if(text == pinSymbol)
-                {
-                    relativeTranslate = bottomLeftTranslate;
-                }
-                //???
-                if(text == arrowTopRightSymbol)
-                {
-                    relativeTranslate = topRightTranslate;
-                }
-                if(text == arrowBottomRightSymbol)
-                {
-                    relativeTranslate = bottomRightTranslate;
-                }
-                m1.Translate(relativeTranslate.Width, relativeTranslate.Height); //switch to different drawing position
-                path.Transform(m1);
+                var matrix = new Matrix();
+                matrix.Translate(DrawLocation.X - bp.X, DrawLocation.Y - bp.Y); //set draw to position with correction by unwanted string drawing offset ("bp")
+
+                var relativePositionToOrigin = GetPosition(text);
+                ApplyTranslationRelativeToTopLeft(matrix, br.Size, relativePositionToOrigin);
+                path.Transform(matrix);
 
                 // To rotate arround the center of the path:
                 //PointF o = new PointF( br.Width / 2, br.Height / 2 );
@@ -103,7 +207,7 @@ namespace WindowsFormsApp4
                 //path.Transform( m2 );
 
                 var m = new Matrix();
-                m.RotateAt(Rotation, Position);
+                m.RotateAt(Rotation, DrawLocation);
                 path.Transform(m);
 
                 g.DrawPath(new Pen(Brushes.Black), path);
@@ -116,12 +220,12 @@ namespace WindowsFormsApp4
 
         private void DrawRectangle(Graphics g, GraphicsPath originalPath, bool verticalCenter = false)
         {
-            PointF alteredPosition = Position;
+            PointF alteredPosition = DrawLocation;
             var boundingRectangle = originalPath.GetBounds(); //at rotation 0
             if (verticalCenter)
             {
                 //move up by 1/2 of height = center vertically
-                alteredPosition = MovePoint(Position, new SizeF(0, -boundingRectangle.Height / 2f)); 
+                alteredPosition = MovePoint(DrawLocation, new SizeF(0, -boundingRectangle.Height / 2f)); 
             }
             var rect = new RectangleF(alteredPosition, boundingRectangle.Size);
 
@@ -130,7 +234,7 @@ namespace WindowsFormsApp4
                 rectPath.AddRectangle(rect);
                 //rotate
                 Matrix rotationMatrix = new Matrix();
-                rotationMatrix.RotateAt(Rotation, Position);
+                rotationMatrix.RotateAt(Rotation, DrawLocation);
                 rectPath.Transform(rotationMatrix);
                 g.DrawPath(new Pen(Brushes.Black), rectPath);
             }
@@ -144,14 +248,14 @@ namespace WindowsFormsApp4
         private GraphicsPath GetTextPath(Graphics g, StringFormat stringFormat)
         {
             var path = new GraphicsPath();
-            path.AddString("sample text", new FontFamily("Arial"), (int)FontStyle.Regular, 120, Position, stringFormat);
+            path.AddString("sample text", new FontFamily("Arial"), (int)FontStyle.Regular, 120, DrawLocation, stringFormat);
 
             DrawRectangle(g, path); //this is the rectangle/position I need the text to be
             DrawRectangle(g, path, verticalCenter: true); //this is the rectangle/position I need the text to be
 
             //rotate
             Matrix rotationMatrix = new Matrix();
-            rotationMatrix.RotateAt(Rotation, Position);
+            rotationMatrix.RotateAt(Rotation, DrawLocation);
             path.Transform(rotationMatrix);
 
             var boundingRectangle = path.GetBounds();
@@ -160,7 +264,7 @@ namespace WindowsFormsApp4
             var boundingRectanglePosition = boundingRectangle.Location;
             if (Rotation == 0)
             {
-                var offset = new PointF(boundingRectanglePosition.X - Position.X, boundingRectanglePosition.Y - Position.Y);
+                var offset = new PointF(boundingRectanglePosition.X - DrawLocation.X, boundingRectanglePosition.Y - DrawLocation.Y);
                 Trace.WriteLine($"Offset against mouse position: {offset}");
             }
             return path;
