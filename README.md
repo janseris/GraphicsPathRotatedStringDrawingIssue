@@ -10,5 +10,6 @@ https://docs.microsoft.com/en-us/answers/questions/939696/graphicspath-text-rend
 https://stackoverflow.com/questions/51006343/winforms-drawing-a-path-in-the-right-place
 https://github.com/dotnet/winforms/issues/7485
 
+
 Working result:
-https://i.imgur.com/tDNsjcW.mp4
+<video src="[https://user-images.githubusercontent.com/126239/151127893-5c98ba8d-c431-4a25-bb1f-e0b33645a2b6.mp4](https://i.imgur.com/tDNsjcW.mp4)"></video>
